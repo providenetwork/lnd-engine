@@ -6,7 +6,7 @@ set -e -u
 LTCD_CERT_HOST=${LTCD_CERT_HOST:-docker.for.mac.host.internal}
 BTCD_CERT_HOST=${BTCD_CERT_HOST:-docker.for.mac.host.internal}
 
-echo "Building images for cert hosts: LTC: $LND_CERT_HOST, BTC: $BTCD_CERT_HOST"
+echo "Building images for cert hosts: LTC: $LTCD_CERT_HOST, BTC: $BTCD_CERT_HOST"
 echo "This cert host is used during ltcd/btcd cert generation"
 echo ""
 
