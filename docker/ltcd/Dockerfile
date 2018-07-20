@@ -71,11 +71,12 @@ RUN \
 
 RUN "/bin/gencerts" --host=${CERT_HOST} --directory="/secure" --force
 
-# Mainnet ports (p2p, rpc)
-EXPOSE 8333 8334
+# TODO: figure out correct ports for ltcd
+# Mainnet ports (rpc)
+EXPOSE 9334
 
-# Testnet ports (p2p, rpc)
-EXPOSE 18333 18334
+# Testnet ports (rpc)
+EXPOSE 19334
 
 # Simnet ports (p2p, rpc)
 EXPOSE 18555 18556
