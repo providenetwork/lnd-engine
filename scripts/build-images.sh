@@ -37,5 +37,5 @@ LTCD_COMMIT_SHA='cdab10132e8c6e4a3ffd112dba54791946d28906'
 # the applicable services docker-compose file
 docker build -t kinesis_lnd_btc ./docker/lnd --build-arg NETWORK=btc --build-arg COMMIT_SHA=$COMMIT_SHA
 docker build -t kinesis_lnd_ltc ./docker/lnd --build-arg NETWORK=ltc --build-arg COMMIT_SHA=$COMMIT_SHA
-docker build -t kinesis_ltcd ./docker/ltcd --build-arg COMMIT_SHA=$LTCD_COMMIT_SHA --build-arg LTCD_CERT_HOST=$CERT_HOST
-docker build -t kinesis_btcd ./docker/btcd --build-arg COMMIT_SHA=$BTCD_COMMIT_SHA --build-arg BTCD_CERT_HOST=$CERT_HOST
+docker build -t kinesis_ltcd ./docker/ltcd --build-arg COMMIT_SHA=$LTCD_COMMIT_SHA --build-arg LTCD_CERT_HOST=$LTCD_CERT_HOST
+docker build -t kinesis_btcd ./docker/btcd --build-arg COMMIT_SHA=$BTCD_COMMIT_SHA --build-arg BTCD_CERT_HOST=$BTCD_CERT_HOST
