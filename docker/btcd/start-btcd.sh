@@ -26,6 +26,7 @@ PARAMS=$(echo \
     "--txindex"
 )
 
+
 # Set the mining flag w/ specified environment variable
 #
 # If the network is set to simnet AND the address is not specified as an env variable

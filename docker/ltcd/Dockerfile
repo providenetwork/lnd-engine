@@ -7,10 +7,7 @@ RUN apk add --no-cache git \
 &&  go get -u github.com/Masterminds/glide
 
 ARG COMMIT_SHA
-
-RUN \
-# Check for mandatory build arguments
-    : "${COMMIT_SHA:?COMMIT_SHA Build argument needs to be set.}"
+RUN : "${COMMIT_SHA:?COMMIT_SHA Build argument needs to be set.}"
 
 WORKDIR $GOPATH/src/github.com/ltcsuite/ltcd
 
@@ -65,9 +62,7 @@ RUN apk add --no-cache \
 # We set the cert host for btcd (set as --build-arg on docker build)
 ARG CERT_HOST
 
-RUN \
-# Check for mandatory build arguments
-    : "${CERT_HOST:?CERT_HOST Build argument needs to be set.}"
+RUN : "${CERT_HOST:?CERT_HOST Build argument needs to be set.}"
 
 RUN "/bin/gencerts" --host=${CERT_HOST} --directory="/secure" --force
 

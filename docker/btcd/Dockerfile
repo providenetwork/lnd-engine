@@ -13,10 +13,7 @@ WORKDIR $GOPATH/src/github.com/btcsuite/btcd
 # to continually grab changes from the LND_VERSION without tagging the release.
 # TODO: set this to a certain release commit
 ARG COMMIT_SHA
-
-RUN \
-# Check for mandatory build arguments
-    : "${COMMIT_SHA:?COMMIT_SHA Build argument needs to be set.}"
+RUN : "${COMMIT_SHA:?COMMIT_SHA Build argument needs to be set.}"
 
 
 # Grab and install the latest version of btcd
