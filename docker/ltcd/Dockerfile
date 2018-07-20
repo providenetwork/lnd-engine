@@ -2,7 +2,6 @@ FROM golang:1.10-alpine as builder
 
 LABEL maintainer="Kinesis Network <kinesis.network>"
 
-
 # Install build deps
 RUN apk add --no-cache git \
 &&  go get -u github.com/Masterminds/glide
