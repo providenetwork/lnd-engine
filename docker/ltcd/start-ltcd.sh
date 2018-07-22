@@ -27,7 +27,7 @@ PARAMS=$(echo \
 # If we are on testnet LTCD then we can disable bootstrapping since there
 # will not be a ltcd DNS seed available.
 if [[ "$NETWORK" == "testnet" ]]; then
-    PARAMS="$PARAMS --nobootstrap"
+    PARAMS="$PARAMS --nodnsseed"
 fi
 
 # Set the mining flag w/ specified environment variable
