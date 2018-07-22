@@ -12,24 +12,33 @@ set -e
 echo 'LND has --noencryptwallet set. MAKE SURE TO REMOVE THIS'
 echo "Using LND w/ env options: CHAIN:$CHAIN NETWORK:$NETWORK NODE:$NODE"
 
-exec lnd \
-    --noencryptwallet \
-    --adminmacaroonpath="$ADMIN_MACAROON" \
-    --readonlymacaroonpath="$READ_ONLY_MACAROON" \
-    --tlscertpath="$TLS_CERT_PATH" \
-    --tlskeypath="$TLS_KEY_PATH" \
-    --rpclisten="$RPC_LISTEN" \
-    --listen="$LISTEN" \
-    --restlisten="$REST_LISTEN" \
-    --datadir="$DATA_DIR" \
-    --logdir="$LOG_DIR" \
+
+PARAMS=$(echo \
+    "--noencryptwallet" \
+    "--adminmacaroonpath=$ADMIN_MACAROON" \
+    "--readonlymacaroonpath=$READ_ONLY_MACAROON" \
+    "--tlscertpath=$TLS_CERT_PATH" \
+    "--tlskeypath=$TLS_KEY_PATH" \
+    "--rpclisten=$RPC_LISTEN" \
+    "--listen=$LISTEN" \
+    "--restlisten=$REST_LISTEN" \
+    "--datadir=$DATA_DIR" \
+    "--logdir=$LOG_DIR" \
     "--$CHAIN.$NETWORK" \
     "--$CHAIN.active" \
-    "--$CHAIN.node"="$NODE" \
-    "--$NODE.rpccert"="$RPC_CERT_PATH" \
-    "--$NODE.rpchost"="$RPC_HOST" \
-    "--$NODE.rpcuser"="$RPC_USER" \
-    "--$NODE.rpcpass"="$RPC_PASS" \
-    --debuglevel="$DEBUG" \
-    --externalip=$EXTERNAL_ADDRESS \
-    "$@"
+    "--$CHAIN.node=$NODE" \
+    "--$NODE.rpccert=$RPC_CERT_PATH" \
+    "--$NODE.rpchost=$RPC_HOST" \
+    "--$NODE.rpcuser=$RPC_USER" \
+    "--$NODE.rpcpass=$RPC_PASS" \
+    "--debuglevel=$DEBUG" \
+    "--externalip=$EXTERNAL_ADDRESS"
+)
+
+# If we are on testnet LTCD then we can disable bootstrapping since there
+# will not be a ltcd DNS seed available.
+if [[ ( "$NETWORK" == "testnet" && "$CHAIN" == "litecoin" ]]; then
+    PARAMS="$PARAMS --nobootstrap"
+fi
+
+exec lnd $PARAMS "$@"
