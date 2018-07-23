@@ -35,8 +35,8 @@ PARAMS=$(echo \
     "--externalip=$EXTERNAL_ADDRESS"
 )
 
-# If we are on testnet LTCD then we can disable bootstrapping since there
-# will not be a ltcd DNS seed available.
+# We want to disable bootstrapping for testnet due to missing LTC DNS seeds for
+# LND and because sparkswap/lnd is not updated to tip
 if [[ "$NETWORK" == "testnet" ]]; then
     PARAMS="$PARAMS --nobootstrap"
 fi
