@@ -87,7 +87,10 @@ function loadProto (path) {
  * @return {grpc.Client}
  */
 function generateLndClient (host, protoPath, tlsCertPath, macaroonPath, { logger }) {
-  const { lnrpc } = loadProto(protoPath)
+  const stuff = loadProto(protoPath)
+  logger.info('stuff', JSON.stringify(stuff))
+
+  const { lnrpc } = stuff
   const credentials = generateCredentials(tlsCertPath, macaroonPath, { logger })
 
   return new lnrpc.Lightning(host, credentials, {})
