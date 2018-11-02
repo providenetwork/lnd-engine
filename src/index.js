@@ -36,7 +36,7 @@ class LndEngine {
     this.macaroonPath = macaroonPath
     this.protoPath = LND_PROTO_FILE_PATH
 
-    this.client = generateLndClient(this.host, this.protoPath, this.tlsCertPath, this.macaroonPath)
+    this.client = generateLndClient(this.host, this.protoPath, this.tlsCertPath, this.macaroonPath, { logger: this.logger })
 
     Object.assign(this, actions)
   }
