@@ -34,12 +34,23 @@ const GRPC_OPTIONS = {
  * @param {String} lndMacaroonPath
  * @return {grpc.credentials}
  */
-function generateCredentials (tlsCertPath, macaroonPath) {
+function generateCredentials (tlsCertPath, macaroonPath, { logger }) {
+  const macaroonExists = fs.existsSync(macaroonPath)
+
+  if (!macaroonExists) {
+    logger.info(`LND-ENGINE warning - macaroon path not found at path: ${macaroonPath}`)
+  }
   if (!fs.existsSync(tlsCertPath)) throw new Error(`LND-ENGINE error - tls cert file not found at path: ${tlsCertPath}`)
-  if (!fs.existsSync(macaroonPath)) throw new Error(`LND-ENGINE error - macaroon path not found at path: ${macaroonPath}`)
 
   const tls = fs.readFileSync(tlsCertPath)
-  const macaroon = fs.readFileSync(macaroonPath)
+
+  // We set the macaroon to a blank string if it does not exists here because there
+  // is a chance the macaroon hasn't been created.
+  // A macaroon will not be created if:
+  //
+  // 1. An LND wallet hasn't been initialized
+  // 2. The daemon/docker has messed up
+  const macaroon = macaroonExists ? fs.readFileSync(macaroonPath) : ''
 
   const metadata = new grpc.Metadata()
   metadata.add('macaroon', macaroon.toString('hex'))
@@ -75,9 +86,9 @@ function loadProto (path) {
  * @param {String} protoFilePath - lnd protobuf file path
  * @return {grpc.Client}
  */
-function generateLndClient (host, protoPath, tlsCertPath, macaroonPath) {
+function generateLndClient (host, protoPath, tlsCertPath, macaroonPath, { logger }) {
   const { lnrpc } = loadProto(protoPath)
-  const credentials = generateCredentials(tlsCertPath, macaroonPath)
+  const credentials = generateCredentials(tlsCertPath, macaroonPath, { logger })
 
   return new lnrpc.Lightning(host, credentials, {})
 }
