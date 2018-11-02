@@ -50,12 +50,17 @@ function generateCredentials (tlsCertPath, macaroonPath, { logger }) {
   //
   // 1. An LND wallet hasn't been initialized
   // 2. The daemon/docker has messed up
-  const macaroon = macaroonExists ? fs.readFileSync(macaroonPath) : ''
+  //
+  // We can return early w/ only tls if the macaroon does not exist
+  if (!macaroonExists) {
+    return grpc.credentials.createSsl(tls)
+  }
 
+  const macaroon = fs.readFileSync(macaroonPath)
   const metadata = new grpc.Metadata()
   metadata.add('macaroon', macaroon.toString('hex'))
-
   const macaroonCredentials = grpc.credentials.createFromMetadataGenerator((_, cb) => cb(null, metadata))
+
   const sslCredentials = grpc.credentials.createSsl(tls)
 
   return grpc.credentials.combineChannelCredentials(sslCredentials, macaroonCredentials)
