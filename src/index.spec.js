@@ -5,11 +5,14 @@ const LndEngine = rewire(path.resolve('src', 'index'))
 
 describe('lnd-engine index', () => {
   const protoFilePath = LndEngine.__get__('LND_PROTO_FILE_PATH')
+
   let clientStub
+  let walletStub
   let currencies
 
   beforeEach(() => {
     clientStub = sinon.stub()
+    walletStub = sinon.stub()
     currencies = [
       {
         symbol: 'BTC'
@@ -17,7 +20,8 @@ describe('lnd-engine index', () => {
     ]
 
     LndEngine.__set__('actions', {})
-    LndEngine.__set__('generateLndClient', clientStub)
+    LndEngine.__set__('generateLightningClient', clientStub)
+    LndEngine.__set__('generateWalletUnlockerClient', walletStub)
     LndEngine.__set__('currencies', currencies)
   })
 
@@ -34,13 +38,20 @@ describe('lnd-engine index', () => {
       engine = new LndEngine(host, symbol, { logger, tlsCertPath: customTlsCertPath, macaroonPath: customMacaroonPath })
     })
 
-    it('generates an lnd client', () => expect(clientStub).to.have.been.calledWith(host, protoFilePath, customTlsCertPath, customMacaroonPath))
     it('sets a symbol', () => expect(engine.symbol).to.eql(symbol))
     it('retrieves currency config', () => expect(engine.currencyConfig).to.eql(currencies[0]))
     it('sets a host', () => expect(engine.host).to.eql(host))
     it('sets a logger', () => expect(engine.logger).to.eql(logger))
     it('sets a tlsCertPath', () => expect(engine.tlsCertPath).to.eql(customTlsCertPath))
     it('sets a macaroonPath', () => expect(engine.macaroonPath).to.eql(customMacaroonPath))
+
+    it('generates an lnd lightning client', () => {
+      expect(clientStub).to.have.been.calledWith(engine)
+    })
+
+    it('generates an lnd wallet unlocker client', () => {
+      expect(walletStub).to.have.been.calledWith(engine)
+    })
 
     it('throws if the currency is not in available configuration', () => {
       expect(() => { new LndEngine(host, 'XYZ') }).to.throw('not a valid symbol') // eslint-disable-line

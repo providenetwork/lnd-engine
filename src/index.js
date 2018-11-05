@@ -1,7 +1,18 @@
+const path = require('path')
+
 const { currencies } = require('./config')
+const {
+  generateLightningClient,
+  generateWalletUnlockerClient
+} = require('./lnd-setup')
 const actions = require('./engine-actions')
-const { generateLndClient } = require('./lnd-setup')
-const LND_PROTO_FILE_PATH = require.resolve('../proto/lnd-rpc.proto')
+
+/**
+ * @constant
+ * @type {Number}
+ * @default
+ */
+const LND_PROTO_FILE_PATH = path.resolve(__dirname, '..', 'proto', 'lnd-rpc.proto')
 
 /**
  * The public interface for interaction with an LND instance
@@ -36,9 +47,26 @@ class LndEngine {
     this.macaroonPath = macaroonPath
     this.protoPath = LND_PROTO_FILE_PATH
 
-    this.client = generateLndClient(this.host, this.protoPath, this.tlsCertPath, this.macaroonPath, { logger: this.logger })
+    this.client = generateLightningClient(this)
+    this.walletUnlocker = generateWalletUnlockerClient(this)
 
     Object.assign(this, actions)
+  }
+
+  /**
+   * Helper to reload the `Lightning` RPC in-case the user's node had not been
+   * setup before
+   */
+  reload () {
+    this.client = generateLightningClient(this)
+  }
+
+  /**
+   * Client will return false if the lnd-engine requires wallet configuration before
+   * the engine is fully functional.
+   */
+  get active () {
+    return !!this.client
   }
 }
 
