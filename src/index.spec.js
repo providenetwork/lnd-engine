@@ -4,8 +4,6 @@ const { expect, rewire, sinon } = require('test/test-helper')
 const LndEngine = rewire(path.resolve('src', 'index'))
 
 describe('lnd-engine index', () => {
-  const protoFilePath = LndEngine.__get__('LND_PROTO_FILE_PATH')
-
   let clientStub
   let walletStub
   let currencies

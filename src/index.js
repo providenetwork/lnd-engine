@@ -66,7 +66,7 @@ class LndEngine {
    * the engine is fully functional.
    */
   get active () {
-    return !!this.client
+    return !!Object.keys(this.client).length
   }
 }
 
