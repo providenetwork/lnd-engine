@@ -3,7 +3,7 @@ const { expect, rewire, sinon } = require('test/test-helper')
 
 const generateLightningClient = rewire(path.resolve('src', 'lnd-setup', 'generate-lightning-client'))
 
-describe.only('generateLightningClient', () => {
+describe('generateLightningClient', () => {
   const host = 'host'
   const protoPath = 'protopath'
   const tlsCertPath = 'tlscertpath'
@@ -12,15 +12,33 @@ describe.only('generateLightningClient', () => {
   let loggerStub
   let engineStub
   let loadProtoStub
-  let lnrpcStub
+  let lightningStub
   let metaDataStub
   let existsSyncStub
+  let metaDataGeneratorStub
+  let readFileSyncStub
+  let tlsCert
+  let createSslStub
+  let combineCredentialsStub
+  let sslCreds
+  let macaroonCreds
+  let combinedCreds
+  let loggerErrorStub
+  let loggerWarnStub
+  let macaroon
 
   beforeEach(() => {
+    macaroonCreds = 'macaroon'
+    sslCreds = 'sslcredentials'
+    tlsCert = 'tlscert'
+    combinedCreds = 'combined'
+    macaroon = 'macaroon'
+    loggerErrorStub = sinon.stub()
+    loggerWarnStub = sinon.stub()
     loggerStub = {
-      warn: sinon.stub(),
+      warn: loggerWarnStub,
       info: sinon.stub(),
-      error: sinon.stub()
+      error: loggerErrorStub
     }
     engineStub = {
       host,
@@ -29,24 +47,34 @@ describe.only('generateLightningClient', () => {
       macaroonPath,
       logger: loggerStub
     }
-    lnrpcStub = sinon.stub().returns({ lnrpc: {} })
-    loadProtoStub = sinon.stub().returns(lnrpcStub)
+    lightningStub = sinon.stub()
+    loadProtoStub = sinon.stub().returns({
+      lnrpc: {
+        Lightning: lightningStub
+      }
+    })
     metaDataStub = sinon.stub()
     metaDataStub.prototype.add = sinon.stub()
     existsSyncStub = sinon.stub().returns(true)
     existsSyncStub.withArgs(tlsCertPath)
+    metaDataGeneratorStub = sinon.stub().returns(macaroonCreds)
+    createSslStub = sinon.stub().returns(sslCreds)
+    readFileSyncStub = sinon.stub()
+    readFileSyncStub.withArgs(tlsCertPath).returns(tlsCert)
+    readFileSyncStub.withArgs(macaroonPath).returns(macaroon)
+    combineCredentialsStub = sinon.stub().returns(combinedCreds)
 
     generateLightningClient.__set__('loadProto', loadProtoStub)
     generateLightningClient.__set__('fs', {
       existsSync: existsSyncStub,
-      readFileSync: sinon.stub().returns({})
+      readFileSync: readFileSyncStub
     })
     generateLightningClient.__set__('grpc', {
       Metadata: metaDataStub,
       credentials: {
-        createFromMetadataGenerator: sinon.stub(),
-        createSsl: sinon.stub(),
-        combineChannelCredentials: sinon.stub()
+        createFromMetadataGenerator: metaDataGeneratorStub,
+        createSsl: createSslStub,
+        combineChannelCredentials: combineCredentialsStub
       }
     })
   })
@@ -62,28 +90,58 @@ describe.only('generateLightningClient', () => {
   })
 
   it('creates macaroon metadata', () => {
-
+    generateLightningClient(engineStub)
+    const callback = metaDataGeneratorStub.args[0][0]
+    const callBackStub = sinon.stub()
+    callback(null, callBackStub)
+    expect(callBackStub).to.have.been.calledWith(null, new metaDataStub()) // eslint-disable-line
   })
 
   it('creates tls credentials', () => {
-
+    generateLightningClient(engineStub)
+    expect(createSslStub).to.have.been.calledWith(tlsCert)
   })
 
   it('combines tls and macaroon credentials', () => {
-
+    generateLightningClient(engineStub)
+    expect(combineCredentialsStub).to.have.been.calledWith(sslCreds, macaroonCreds)
   })
 
   it('creates a new lightning rpc client', () => {
-
+    generateLightningClient(engineStub)
+    expect(lightningStub).to.have.been.calledWith(host, combinedCreds)
   })
 
   context('daemon is not initializaed', () => {
-    it('logs a failure', () => {})
-    it('returns null', () => {})
+    beforeEach(() => {
+      // No `Lightning` rpc will exist if the daemon is not initialized
+      loadProtoStub.returns({ lnrpc: {} })
+    })
+
+    it('logs a failure', () => {
+      generateLightningClient(engineStub)
+      expect(loggerErrorStub).to.have.been.calledWith(sinon.match('Unable to create Lightning rpc'))
+    })
+
+    it('returns null', () => {
+      expect(generateLightningClient(engineStub)).to.eql(null)
+    })
   })
 
   context('macaroon not found', () => {
-    it('logs a warning if macaroon was not found', () => {})
-    it('it returns ssl credentials', () => {})
+    beforeEach(() => {
+      existsSyncStub.withArgs(macaroonPath).returns(false)
+    })
+
+    it('logs a warning if macaroon was not found', () => {
+      generateLightningClient(engineStub)
+      expect(loggerWarnStub).to.have.been.calledWith(sinon.match('macaroon path not found'))
+    })
+
+    it('it only uses ssl credentials', () => {
+      generateLightningClient(engineStub)
+      expect(metaDataGeneratorStub).to.not.have.been.called()
+      expect(combineCredentialsStub).to.not.have.been.called()
+    })
   })
 })
