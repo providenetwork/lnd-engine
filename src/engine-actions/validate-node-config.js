@@ -15,11 +15,11 @@ const UNKNOWN_LIGHTNING_SERVICE_CODE = 12
  *
  * @return {Boolean} isUnlocked
  */
-async function isEngineUnlocked () {
+async function isEngineUnlocked (client) {
   try {
     // If the call to `getInfo` succeeds, then we can assume that our LND instance
     // is unlocked and functional
-    await getInfo({ client: this.client })
+    await getInfo({ client })
     return true
   } catch (e) {
     // CODE 12 for grpc is equal to 'unknown service' or an error type of
@@ -43,7 +43,7 @@ async function isEngineUnlocked () {
  * @return {Boolean} Whether the configuration matches the node
  */
 async function validateNodeConfig () {
-  const isUnlocked = await isEngineUnlocked()
+  const isUnlocked = await isEngineUnlocked(this.client)
 
   // We need to set the `isUnlocked` variable here so that end users can call the engine
   // and validate if the engine is available or not
