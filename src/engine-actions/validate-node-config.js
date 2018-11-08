@@ -1,8 +1,10 @@
-const { promisify } = require('util')
-const { getInfo } = require('../lnd-actions')
+const {
+  getInfo,
+  genSeed
+} = require('../lnd-actions')
 
 /**
- * CODE 12 for gprc is equal to 'unimplemented
+ * CODE 12 for gprc is equal to 'unimplemented'
  * @see https://github.com/grpc/grpc-go/blob/master/codes/codes.go
  * @constant
  * @type {Number}
@@ -13,7 +15,9 @@ const UNKNOWN_LIGHTNING_SERVICE_CODE = 12
 /**
  * Rough estimate if the lnd instance's wallet is unlocked or not
  *
- * @return {Boolean} isUnlocked
+ * @private
+ * @param {grpc.Client} Lightning grpc client
+ * @return {Boolean} isEngineUnlocked
  */
 async function isEngineUnlocked (client) {
   try {
@@ -40,7 +44,11 @@ async function isEngineUnlocked (client) {
  * hooked up to.
  *
  * @function
- * @return {Boolean} Whether the configuration matches the node
+ * @return {True} Node is configured correctly
+ * @throws {Error} Failed to validate an unlocked engine
+ * @throws {Error} LND has no chains configured
+ * @throws {Error} LND can only support one active chain at a time
+ * @throws {Error} Mismatched configuration if chain is different than engine configuration
  */
 async function validateNodeConfig () {
   const isUnlocked = await isEngineUnlocked(this.client)
@@ -53,8 +61,13 @@ async function validateNodeConfig () {
   // then we should check the only non-modifying endpoint of the WalletUnlocker to make
   // sure that a connection to the daemon can be made.
   if (!isUnlocked) {
-    await promisify(this.walletUnlocker.genSeed)({})
-    return true
+    try {
+      await genSeed()
+      return true
+    } catch (e) {
+      this.logger.error('Call to validate an unlocked engine failed', e)
+      throw new Error(`Call to validate an unlocked engine has failed. Please check your ${this.currencyConfig.chainName} lnd instance`)
+    }
   }
 
   // If the wallet is unlocked and functional in LND (Lightning service is available),
