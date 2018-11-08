@@ -10,7 +10,7 @@ const {
  * @type {Number}
  * @default
  */
-const UNKNOWN_LIGHTNING_SERVICE_CODE = 12
+const UNIMPLEMENTED_SERVICE_CODE = 12
 
 /**
  * Rough estimate if the lnd instance's wallet is unlocked or not
@@ -30,7 +30,7 @@ async function isEngineUnlocked (client) {
     // unimplemented.
     // In GRPC Unimplemented indicates operation is not implemented or not
     // supported/enabled in this specific service.
-    if (e.code && e.code === UNKNOWN_LIGHTNING_SERVICE_CODE) {
+    if (e.code && e.code === UNIMPLEMENTED_SERVICE_CODE) {
       return false
     }
 
@@ -62,7 +62,7 @@ async function validateNodeConfig () {
   // sure that a connection to the daemon can be made.
   if (!isUnlocked) {
     try {
-      await genSeed()
+      await genSeed({ client: this.walletUnlocker })
       return true
     } catch (e) {
       this.logger.error('Call to validate an unlocked engine failed', e)
