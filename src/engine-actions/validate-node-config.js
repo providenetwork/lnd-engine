@@ -67,7 +67,7 @@ async function validateNodeConfig () {
       await genSeed({ client: this.walletUnlocker })
       return true
     } catch (e) {
-      this.logger.error('Call to validate an unlocked engine failed', e)
+      this.logger.error('Call to validate an unlocked engine failed', { stack: e.stack })
       throw new Error(`Call to validate an unlocked engine has failed. Please check your ${this.currencyConfig.chainName} lnd instance`)
     }
   }
