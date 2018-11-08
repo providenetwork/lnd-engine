@@ -19,10 +19,8 @@ const fs = require('fs')
  * @returns {grpc.Client} lnrpc WalletUnlocker client definition
  * @returns {null}
  */
-function generateWalletUnlockerClient ({ host, protoPath, tlsCertPath, logger }) {
-  const lnrpc = loadProto(protoPath)
-
-  logger.info(lnrpc)
+function generateWalletUnlockerClient ({ host, protoPath, tlsCertPath }) {
+  const { lnrpc } = loadProto(protoPath)
 
   if (!fs.existsSync(tlsCertPath)) {
     throw new Error(`LND-ENGINE error - tls cert file not found at path: ${tlsCertPath}`)
