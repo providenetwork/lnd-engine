@@ -5,9 +5,17 @@ const { getInfo } = require('../lnd-actions')
  * hooked up to. Sets the engine validated flag to true if all validations pass.
  *
  * @function
+ * @throws {Error} Not Unlocked
+ * @throws {Error} No Chains Configured
+ * @throws {Error} Only allow, at most, one active chain
+ * @throws {Error} Mismatched Configuration
  * @return {void}
  */
 async function validateNodeConfig () {
+  if (!this.unlocked) {
+    throw new Error('LndEngine is locked, unable to validate config')
+  }
+
   const { chains = [] } = await getInfo({ client: this.client })
 
   if (chains.length === 0) {

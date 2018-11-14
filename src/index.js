@@ -1,7 +1,4 @@
-const path = require('path')
-
 const { currencies } = require('./config')
-<<<<<<< HEAD
 const {
   generateLightningClient,
   generateWalletUnlockerClient
@@ -10,19 +7,14 @@ const {
   validationDependentActions,
   validationIndependentActions
 } = require('./engine-actions')
+const { exponentialBackoff } = require('./utils')
 
 /**
  * @constant
- * @type {Number}
+ * @type {String}
  * @default
  */
-const LND_PROTO_FILE_PATH = path.resolve(__dirname, '..', 'proto', 'lnd-rpc.proto')
-=======
-const { validationDependentActions, validationIndependentActions } = require('./engine-actions')
-const { generateLndClient } = require('./lnd-setup')
 const LND_PROTO_FILE_PATH = require.resolve('../proto/lnd-rpc.proto')
-const { exponentialBackoff } = require('./utils')
->>>>>>> 23afa75bd37be229ad3f0d9fd52277a7f174388f
 
 /**
  * The public interface for interaction with an LND instance
@@ -34,7 +26,7 @@ class LndEngine {
    * @class
    * @param {String} host - host gRPC address
    * @param {String} symbol Common symbol of the currency this engine supports (e.g. `BTC`)
-   * @param {Object} options
+   * @param {Object} [options={}]
    * @param {Logger} [options.logger=console] - logger used by the engine
    * @param {String} options.tlsCertPath - file path to the TLS certificate for LND
    * @param {String} options.macaroonPath - file path to the macaroon file for LND
@@ -59,22 +51,30 @@ class LndEngine {
     this.client = generateLightningClient(this)
     this.walletUnlocker = generateWalletUnlockerClient(this)
 
+    // This key will let the consumer know if the current Engine's configuration
+    // matches that of the information passed through the constructor of the Engine.
+    //
+    // The configuration of the Engine lets the user know what currencies/chains are
+    // currently supported, as well as providing assurance that communication to
+    // an engine's node is available.
+    //
+    //
     // We set validated to false by default, however this will be modified in the
     // `validateNodeConfig` action
     this.validated = false
 
+    // This key will let the consumer know if the current Engine requires additional setup
+    // or if the engine is ready to process requests. An LND Engine is referred to as `locked`
+    // when no wallet is present OR if LND Engine requires a password to unlock the current
+    // wallet
+    //
+    // We set unlocked to false by default, however this will be modified in the
+    // `isEngineUnlocked` action
+    this.unlocked = false
+
     // We wrap all validation dependent actions in a callback so we can prevent
-    // their use if the current engine is in an invalid state.
-    //
-    // States of the Engine:
-    // 1. Locked
-    //   - Typically happens during first-time use. No wallet is available on the engine instance
-    //     so it must be created.
-    // 2. Unlocked but invalid
-    //   - we have created a wallet, but our configuration is messed up
-    // 3. Unlocked and valid
-    //   - the engine is ready to go
-    //
+    // their use if the current engine is in a state that prevents a call from
+    // functioning correctly.
     Object.entries(validationDependentActions).forEach(([name, action]) => {
       this[name] = (...args) => {
         if (!this.validated) throw new Error(`${symbol} Engine is not ready yet`)
@@ -88,15 +88,24 @@ class LndEngine {
   }
 
   /**
-   * Validates the current engine
+   * Validates and sets the current state of an engine
+   *
+   * States of the Engine:
+   * - Locked - First-time use or engine requires a password to have access to funds
+   * - Unlocked and Invalid - Wallet is present, password has unlocked engine, but configuration is messed up
+   * - Unlocked and Validated - engine is fully functional and ready to accept requests
    *
    * @returns {void}
    */
   async validateEngine () {
     try {
-      // We do not await this function because we want the validations to run in the background.
-      // It can take time for the engines to be ready, so we use exponential backoff to retry validation
-      // for a period of time, until it is either successful or there is actually something wrong.
+      // We make a initial call to check if engine is unlocked. The result updates
+      // `this.unlocked` and is then used in the underlying configuration check.
+      await this.isEngineUnlocked()
+
+      // It can take an extended period time for the engines to be ready, due to blockchain
+      // syncing or setup, so we use exponential backoff to retry validation until
+      // it is either successful or there is something wrong.
       const validationCall = () => this.validateNodeConfig()
       const payload = { symbol: this.symbol }
       const errorMessage = 'Engine failed to validate. Retrying'

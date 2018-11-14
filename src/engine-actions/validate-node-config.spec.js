@@ -22,7 +22,8 @@ describe('validateNodeConfig', () => {
     }
     engine = {
       client: clientStub,
-      currencyConfig
+      currencyConfig,
+      unlocked: true
     }
   })
 
@@ -33,6 +34,11 @@ describe('validateNodeConfig', () => {
 
   it('returns true if configuration matches', async () => {
     expect(await validateNodeConfig.call(engine)).to.be.eql(undefined)
+  })
+
+  it('throws an error if the engine is locked', () => {
+    engine.unlocked = false
+    return expect(validateNodeConfig.call(engine)).to.eventually.be.rejectedWith('is locked')
   })
 
   it('throws if LND has more than one chain active', () => {

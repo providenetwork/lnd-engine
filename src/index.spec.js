@@ -110,6 +110,12 @@ describe('lnd-engine index', () => {
       LndEngine.__set__('exponentialBackoff', exponentialStub)
 
       engine = new LndEngine(host, symbol, { logger, tlsCertPath: customTlsCertPath, macaroonPath: customMacaroonPath, validations: false })
+      engine.isEngineUnlocked = sinon.stub().resolves(true)
+    })
+
+    it('checks if an engine is unlocked', async () => {
+      await engine.validateEngine()
+      expect(engine.isEngineUnlocked).to.have.been.calledOnce()
     })
 
     it('wraps a function in exponential backoff', async () => {
