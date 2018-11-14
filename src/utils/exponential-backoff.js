@@ -56,7 +56,7 @@ async function exponentialBackoff (callFunction, payload = {}, { errorMessage = 
       const delayTimeInSeconds = Math.round(delayTime / ONE_SECOND_IN_MILLISECONDS)
 
       if (errorMessage) {
-        logger.error(errorMessage, { payload, delayTimeInSeconds, attemptsLeft, error })
+        logger.error(errorMessage, { payload, delayTimeInSeconds, attemptsLeft, error: error.stack })
       } else {
         logger.error(`Error calling ${callFunction}. Retrying in ${delayTimeInSeconds} seconds, attempts left: ${attemptsLeft}`, { payload, error })
       }
