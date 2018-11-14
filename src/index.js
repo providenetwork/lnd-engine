@@ -101,12 +101,16 @@ class LndEngine {
         // `this.unlocked` and is then used in the underlying configuration check.
         this.unlocked = await this.isEngineUnlocked()
 
-        if (this.unlocked) {
-          this.validated = await this.isNodeConfigValid()
-        } else {
+        if (!this.unlocked) {
           throw new Error('LndEngine is locked, unable to validate config')
         }
+
+        // Once the engine is unlocked, we will attempt to validate our engine's
+        // configuration. If we call `isNodeConfigValid` before the engine is unlocked
+        // the call will fail without a friendly error
+        this.validated = await this.isNodeConfigValid()
       }
+
       // It can take an extended period time for the engines to be ready, due to blockchain
       // syncing or setup, so we use exponential backoff to retry validation until
       // it is either successful or there is something wrong.
