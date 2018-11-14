@@ -1,6 +1,7 @@
 const path = require('path')
 
 const { currencies } = require('./config')
+<<<<<<< HEAD
 const {
   generateLightningClient,
   generateWalletUnlockerClient
@@ -16,6 +17,12 @@ const {
  * @default
  */
 const LND_PROTO_FILE_PATH = path.resolve(__dirname, '..', 'proto', 'lnd-rpc.proto')
+=======
+const { validationDependentActions, validationIndependentActions } = require('./engine-actions')
+const { generateLndClient } = require('./lnd-setup')
+const LND_PROTO_FILE_PATH = require.resolve('../proto/lnd-rpc.proto')
+const { exponentialBackoff } = require('./utils')
+>>>>>>> 23afa75bd37be229ad3f0d9fd52277a7f174388f
 
 /**
  * The public interface for interaction with an LND instance
@@ -25,7 +32,7 @@ class LndEngine {
    * LndEngine Constructor
    *
    * @class
-   * @param {String} host - host grpc address
+   * @param {String} host - host gRPC address
    * @param {String} symbol Common symbol of the currency this engine supports (e.g. `BTC`)
    * @param {Object} options
    * @param {Logger} [options.logger=console] - logger used by the engine
@@ -51,8 +58,23 @@ class LndEngine {
     this.protoPath = LND_PROTO_FILE_PATH
     this.client = generateLightningClient(this)
     this.walletUnlocker = generateWalletUnlockerClient(this)
+
+    // We set validated to false by default, however this will be modified in the
+    // `validateNodeConfig` action
     this.validated = false
 
+    // We wrap all validation dependent actions in a callback so we can prevent
+    // their use if the current engine is in an invalid state.
+    //
+    // States of the Engine:
+    // 1. Locked
+    //   - Typically happens during first-time use. No wallet is available on the engine instance
+    //     so it must be created.
+    // 2. Unlocked but invalid
+    //   - we have created a wallet, but our configuration is messed up
+    // 3. Unlocked and valid
+    //   - the engine is ready to go
+    //
     Object.entries(validationDependentActions).forEach(([name, action]) => {
       this[name] = (...args) => {
         if (!this.validated) throw new Error(`${symbol} Engine is not ready yet`)
@@ -63,6 +85,27 @@ class LndEngine {
     Object.entries(validationIndependentActions).forEach(([name, action]) => {
       this[name] = action
     })
+  }
+
+  /**
+   * Validates the current engine
+   *
+   * @returns {void}
+   */
+  async validateEngine () {
+    try {
+      // We do not await this function because we want the validations to run in the background.
+      // It can take time for the engines to be ready, so we use exponential backoff to retry validation
+      // for a period of time, until it is either successful or there is actually something wrong.
+      const validationCall = () => this.validateNodeConfig()
+      const payload = { symbol: this.symbol }
+      const errorMessage = 'Engine failed to validate. Retrying'
+      await exponentialBackoff(validationCall, payload, { errorMessage, logger: this.logger })
+    } catch (e) {
+      return this.logger.error(`Failed to validate engine for ${this.symbol}, error: ${e}`, { error: e })
+    }
+
+    this.logger.info(`Validated engine configuration for ${this.symbol}`)
   }
 }
 
