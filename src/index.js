@@ -51,22 +51,22 @@ class LndEngine {
     this.client = generateLightningClient(this)
     this.walletUnlocker = generateWalletUnlockerClient(this)
 
-    // This key will let the consumer know if the current Engine's configuration
-    // matches that of the information passed through the constructor of the Engine.
+    // This key identifies if the current Engine's configuration matches information
+    // passed through the constructor of the Engine.
     //
     // The configuration of the Engine lets the user know what currencies/chains are
     // currently supported, as well as providing assurance that communication to
     // an engine's node is available.
     //
-    //
     // We set validated to false by default, however this will be modified in the
-    // `validateNodeConfig` action
+    // `validateEngine` action
     this.validated = false
 
-    // This key will let the consumer know if the current Engine requires additional setup
-    // or if the engine is ready to process requests. An LND Engine is referred to as `locked`
-    // when no wallet is present OR if LND Engine requires a password to unlock the current
-    // wallet
+    // This key identifies if the current Engine requires any additional setup
+    // or, conversely, if the engine is ready to process requests.
+    //
+    // An Engine is `locked` when no wallet is present OR if LND Engine requires
+    // a password to unlock the current wallet
     //
     // We set unlocked to false by default, however this will be modified in the
     // `isEngineUnlocked` action
