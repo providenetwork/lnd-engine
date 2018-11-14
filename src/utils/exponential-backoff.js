@@ -28,13 +28,6 @@ const EXPONENTIAL_BACKOFF_ATTEMPTS = 24
 const EXPONENTIAL_BACKOFF_DELAY = 5000
 
 /**
- * @constant
- * @type {Number}
- * @default
- */
-const ONE_SECOND_IN_MILLISECONDS = 1000
-
-/**
  * Calls a function repeatedly until success or throws if it fails on final retry
  *
  * @param {Function} callFunction
@@ -53,12 +46,11 @@ async function exponentialBackoff (callFunction, payload = {}, { errorMessage = 
     if (attempts > 0) {
       const attemptsLeft = attempts - 1
       const nextDelayTime = delayTime * DELAY_MULTIPLIER
-      const delayTimeInSeconds = Math.round(delayTime / ONE_SECOND_IN_MILLISECONDS)
 
       if (errorMessage) {
-        logger.error(errorMessage, { payload, delayTimeInSeconds, attemptsLeft, error: error.message })
+        logger.error(errorMessage, { payload, delayTime, attemptsLeft, error })
       } else {
-        logger.error(`Error calling ${callFunction}. Retrying in ${delayTimeInSeconds} seconds, attempts left: ${attemptsLeft}`, { payload, error: error.message })
+        logger.error(`Error calling ${callFunction}. Retrying in ${Math.round(delayTime / 1000)} seconds, attempts left: ${attemptsLeft}`, { payload, error })
       }
 
       await delay(delayTime)
