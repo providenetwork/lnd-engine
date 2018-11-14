@@ -11,7 +11,7 @@ describe('isEngineUnlocked', () => {
     engine = {
       walletUnlocker: sinon.stub(),
       logger: {
-        debug: sinon.stub()
+        error: sinon.stub()
       }
     }
     genSeedStub = sinon.stub()
@@ -30,6 +30,12 @@ describe('isEngineUnlocked', () => {
     expect(res).to.be.eql(false)
   })
 
+  it('logs error if call to genSeed fails, but is implemented', async () => {
+    genSeedStub.throws()
+    const res = await isEngineUnlocked.call(engine)
+    expect(engine.logger.error).to.have.been.calledWith(sinon.match('Error received'))
+  })
+
   context('wallet is unlocked', () => {
     let res
 
@@ -41,10 +47,6 @@ describe('isEngineUnlocked', () => {
 
     beforeEach(async () => {
       res = await isEngineUnlocked.call(engine)
-    })
-
-    it('creates a debug log', () => {
-      expect(engine.logger.debug).to.have.been.calledWith(sinon.match('Error received'))
     })
 
     it('returns true if an engine is unlocked', () => {
