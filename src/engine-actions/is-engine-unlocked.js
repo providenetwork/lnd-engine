@@ -4,6 +4,7 @@ const {
 
 /**
  * CODE 12 for gRPC is equal to 'unimplemented'
+ *
  * @see https://github.com/grpc/grpc-go/blob/master/codes/codes.go
  * @constant
  * @type {Number}
@@ -12,11 +13,15 @@ const {
 const UNIMPLEMENTED_SERVICE_CODE = 12
 
 /**
- * Rough estimate if the lnd instance's wallet is unlocked or not
+ * Rough estimate if the engine's node unlocked or not. Sets the `unlocked` flag
+ * on an engine.
  *
- * @private
- * @param {gRPC.Client} Lightning gRPC client
- * @return {Boolean} isEngineUnlocked
+ * States of the Engine:
+ * - Locked - First-time use or engine requires a password to have access to funds
+ * - Unlocked - engine is fully functional and ready to accept requests
+ *
+ * @function
+ * @return {Boolean}
  */
 async function isEngineUnlocked () {
   try {
@@ -34,9 +39,6 @@ async function isEngineUnlocked () {
     }
   }
 
-  // By default, we return false because it means the error was unrelated to the
-  // response we were expecting. The user will need to check the underlying daemon,
-  // but we can assume that the current engine is still locked w/ WalletLocker
   return false
 }
 

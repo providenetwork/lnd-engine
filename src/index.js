@@ -90,25 +90,26 @@ class LndEngine {
   /**
    * Validates and sets the current state of an engine
    *
-   * States of the Engine:
-   * - Locked - First-time use or engine requires a password to have access to funds
-   * - Unlocked and Invalid - Wallet is present, password has unlocked engine, but configuration is messed up
-   * - Unlocked and Validated - engine is fully functional and ready to accept requests
-   *
    * @returns {void}
    */
   async validateEngine () {
     try {
-      // We make a initial call to check if engine is unlocked. The result updates
-      // `this.unlocked` and is then used in the underlying configuration check.
-      await this.isEngineUnlocked()
+      const payload = { symbol: this.symbol }
+      const errorMessage = 'Engine failed to validate. Retrying'
+      const validationCall = async () => {
+        // We make a initial call to check if engine is unlocked. The result updates
+        // `this.unlocked` and is then used in the underlying configuration check.
+        this.unlocked = await this.isEngineUnlocked()
 
+        if (this.unlocked) {
+          this.validated = await this.isNodeConfigValid()
+        } else {
+          throw new Error('LndEngine is locked, unable to validate config')
+        }
+      }
       // It can take an extended period time for the engines to be ready, due to blockchain
       // syncing or setup, so we use exponential backoff to retry validation until
       // it is either successful or there is something wrong.
-      const validationCall = () => this.validateNodeConfig()
-      const payload = { symbol: this.symbol }
-      const errorMessage = 'Engine failed to validate. Retrying'
       await exponentialBackoff(validationCall, payload, { errorMessage, logger: this.logger })
     } catch (e) {
       return this.logger.error(`Failed to validate engine for ${this.symbol}, error: ${e}`, { error: e })

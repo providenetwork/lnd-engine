@@ -9,14 +9,15 @@ const { getInfo } = require('../lnd-actions')
  * @throws {Error} No Chains Configured
  * @throws {Error} Only allow, at most, one active chain
  * @throws {Error} Mismatched Configuration
- * @return {void}
+ * @return {Boolean}
  */
-async function validateNodeConfig () {
-  if (!this.unlocked) {
-    throw new Error('LndEngine is locked, unable to validate config')
+async function isNodeConfigValid () {
+  try {
+    var { chains = [] } = await getInfo({ client: this.client })
+  } catch (e) {
+    this.logger.error('Unable to get info from engine', { error: e })
+    return false
   }
-
-  const { chains = [] } = await getInfo({ client: this.client })
 
   if (chains.length === 0) {
     throw new Error('LND has no chains configured.')
@@ -32,7 +33,7 @@ async function validateNodeConfig () {
     throw new Error(`Mismatched configuration: Engine is configured for ${this.currencyConfig.chainName}, LND is configured for ${chainName}.`)
   }
 
-  this.validated = true
+  return true
 }
 
-module.exports = validateNodeConfig
+module.exports = isNodeConfigValid

@@ -110,12 +110,6 @@ describe('lnd-engine index', () => {
       LndEngine.__set__('exponentialBackoff', exponentialStub)
 
       engine = new LndEngine(host, symbol, { logger, tlsCertPath: customTlsCertPath, macaroonPath: customMacaroonPath, validations: false })
-      engine.isEngineUnlocked = sinon.stub().resolves(true)
-    })
-
-    it('checks if an engine is unlocked', async () => {
-      await engine.validateEngine()
-      expect(engine.isEngineUnlocked).to.have.been.calledOnce()
     })
 
     it('wraps a function in exponential backoff', async () => {
@@ -132,6 +126,36 @@ describe('lnd-engine index', () => {
       exponentialStub.throws()
       await engine.validateEngine()
       expect(logger.error).to.have.been.calledWith(sinon.match('Failed to validate engine'))
+    })
+
+    describe('validationCall', () => {
+      let validationCall
+
+      beforeEach(async () => {
+        engine.isEngineUnlocked = sinon.stub().resolves(true)
+        engine.isNodeConfigValid = sinon.stub().resolves(true)
+
+        await engine.validateEngine()
+
+        validationCall = exponentialStub.args[0][0]
+      })
+
+      it('checks if an engine is unlocked', async () => {
+        await validationCall()
+        expect(engine.isEngineUnlocked).to.have.been.calledOnce()
+        expect(engine.unlocked).to.be.eql(true)
+      })
+
+      it('checks if node config is valid', async () => {
+        await validationCall()
+        expect(engine.isNodeConfigValid).to.have.been.calledOnce()
+        expect(engine.validated).to.be.eql(true)
+      })
+
+      it('throws an error if lnd engine is locked', () => {
+        engine.isEngineUnlocked.resolves(false)
+        return expect(validationCall()).to.eventually.be.rejectedWith('LndEngine is locked')
+      })
     })
   })
 })
