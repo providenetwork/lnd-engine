@@ -32,7 +32,7 @@ describe('isEngineUnlocked', () => {
 
   it('logs error if call to genSeed fails, but is implemented', async () => {
     genSeedStub.throws()
-    const res = await isEngineUnlocked.call(engine)
+    await isEngineUnlocked.call(engine)
     expect(engine.logger.error).to.have.been.calledWith(sinon.match('Error received'))
   })
 
