@@ -62,16 +62,6 @@ class LndEngine {
     // `validateEngine` action
     this.validated = false
 
-    // This key identifies if the current Engine requires any additional setup
-    // or, conversely, if the engine is ready to process requests.
-    //
-    // An Engine is `locked` when no wallet is present OR if LND Engine requires
-    // a password to unlock the current wallet
-    //
-    // We set unlocked to false by default, however this will be modified in the
-    // `isEngineUnlocked` action
-    this.unlocked = false
-
     // We wrap all validation dependent actions in a callback so we can prevent
     // their use if the current engine is in a state that prevents a call from
     // functioning correctly.
@@ -97,11 +87,14 @@ class LndEngine {
       const payload = { symbol: this.symbol }
       const errorMessage = 'Engine failed to validate. Retrying'
       const validationCall = async () => {
-        // We make a initial call to check if engine is unlocked. The result updates
-        // `this.unlocked` and is then used in the underlying configuration check.
-        this.unlocked = await this.isEngineUnlocked()
+        // An Engine is `locked` when no wallet is present OR if LND Engine requires
+        // a password to unlock the current wallet
+        //
+        // We make this initial call to check if engine is unlocked before continuing
+        // to validate the current engine
+        const engineIsUnlocked = await this.isEngineUnlocked()
 
-        if (!this.unlocked) {
+        if (!engineIsUnlocked) {
           throw new Error('LndEngine is locked, unable to validate config')
         }
 

@@ -143,7 +143,6 @@ describe('lnd-engine index', () => {
       it('checks if an engine is unlocked', async () => {
         await validationCall()
         expect(engine.isEngineUnlocked).to.have.been.calledOnce()
-        expect(engine.unlocked).to.be.eql(true)
       })
 
       it('checks if node config is valid', async () => {

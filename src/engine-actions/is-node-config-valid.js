@@ -9,15 +9,10 @@ const { getInfo } = require('../lnd-actions')
  * @throws {Error} No Chains Configured
  * @throws {Error} Only allow, at most, one active chain
  * @throws {Error} Mismatched Configuration
- * @return {Boolean}
+ * @return {True}
  */
 async function isNodeConfigValid () {
-  try {
-    var { chains = [] } = await getInfo({ client: this.client })
-  } catch (e) {
-    this.logger.error('Unable to get info from engine', { error: e })
-    return false
-  }
+  var { chains = [] } = await getInfo({ client: this.client })
 
   if (chains.length === 0) {
     throw new Error('LND has no chains configured.')

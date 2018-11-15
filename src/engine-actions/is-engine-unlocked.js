@@ -36,7 +36,8 @@ async function isEngineUnlocked () {
       return true
     }
 
-    this.logger.error(`Error received when checking for ${this.symbol} engine state`, { error: e })
+    // Rethrow the error since the user will now need to troubleshoot the engine
+    throw e
   }
 
   return false

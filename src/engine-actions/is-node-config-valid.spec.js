@@ -41,11 +41,6 @@ describe('isNodeConfigValid', () => {
     expect(getInfoStub).to.have.been.calledWith(sinon.match({ client: clientStub }))
   })
 
-  it('returns false if a call to lnd instance fails', async () => {
-    getInfoStub.throws()
-    expect(await isNodeConfigValid.call(engine)).to.be.eql(false)
-  })
-
   it('throws if LND has more than one chain active', () => {
     getInfoResponse.chains = [ 'bitcoin', 'litecoin' ]
     return expect(isNodeConfigValid.call(engine)).to.eventually.be.rejectedWith('at most one chain')

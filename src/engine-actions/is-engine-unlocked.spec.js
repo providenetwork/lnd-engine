@@ -24,16 +24,10 @@ describe('isEngineUnlocked', () => {
     expect(genSeedStub).to.have.been.calledWith(sinon.match({ client: engine.walletUnlocker }))
   })
 
-  it('returns false if the call to genSeed fails, but is implemented', async () => {
-    genSeedStub.throws()
-    const res = await isEngineUnlocked.call(engine)
-    expect(res).to.be.eql(false)
-  })
-
-  it('logs error if call to genSeed fails, but is implemented', async () => {
-    genSeedStub.throws()
-    await isEngineUnlocked.call(engine)
-    expect(engine.logger.error).to.have.been.calledWith(sinon.match('Error received'))
+  it('throws an error if the call to genSeed fails, but is implemented', async () => {
+    const error = 'bad request'
+    genSeedStub.throws(new Error(error))
+    expect(isEngineUnlocked.call(engine)).to.eventually.be.rejectedWith(error)
   })
 
   context('wallet is unlocked', () => {
