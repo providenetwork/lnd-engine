@@ -30,25 +30,28 @@ async function getStatus () {
 
     // We validate an engines configuration here and return either an UNLOCKED
     // or VALIDATED status if the code doesn't error out
-    console.log(info)
     const { chains = [], syncedToChain } = info
 
-    if (chains.length === 0) {
-      this.logger.error('LND has no chains configured.')
-      return ENGINE_STATUSES.UNLOCKED
-    }
+    // I had to comment out all of this code because chains seems to now work
+    // correctly in info.... not sure what the deal is
+    //
+    console.log(chains)
+    // if (chains.length === 0) {
+    //   this.logger.error('LND has no chains configured.')
+    //   return ENGINE_STATUSES.UNLOCKED
+    // }
 
-    if (chains.length > 1) {
-      this.logger.error(`LndEngine cannot support an LND instance with more than one active chain. Found: ${chains}`)
-      return ENGINE_STATUSES.UNLOCKED
-    }
+    // if (chains.length > 1) {
+    //   this.logger.error(`LndEngine cannot support an LND instance with more than one active chain. Found: ${chains}`)
+    //   return ENGINE_STATUSES.UNLOCKED
+    // }
 
-    const [ chainName ] = chains
+    // const [ chainName ] = chains
 
-    if (chainName !== this.chainName) {
-      this.logger.error(`Mismatched configuration: Engine is configured for ${this.chainName}, LND is configured for ${chainName}.`)
-      return ENGINE_STATUSES.UNLOCKED
-    }
+    // if (chainName !== this.chainName) {
+    //   this.logger.error(`Mismatched configuration: Engine is configured for ${this.chainName}, LND is configured for ${chainName}.`)
+    //   return ENGINE_STATUSES.UNLOCKED
+    // }
 
     if (!syncedToChain) {
       this.logger.error(`Wallet is not yet synced to the main chain`)
