@@ -30,12 +30,12 @@ async function getStatus () {
 
     // We validate an engines configuration here and return either an UNLOCKED
     // or VALIDATED status if the code doesn't error out
-    const { chains = [], syncedToChain } = info
+    // const { chains = [], syncedToChain } = info
+    const { syncedToChain } = info
 
     // I had to comment out all of this code because chains seems to now work
     // correctly in info.... not sure what the deal is
     //
-    console.log(chains)
     // if (chains.length === 0) {
     //   this.logger.error('LND has no chains configured.')
     //   return ENGINE_STATUSES.UNLOCKED
