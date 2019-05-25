@@ -28,7 +28,7 @@ echo "LND Engine Build starting..."
 echo ""
 echo ""
 
-LND_VERSION='v0.5.4-sparkswap-beta'
+LND_VERSION='master'
 
 # Downloads an LND proto file from the sparkswap/lnd fork
 LND_PROTO_URL="https://raw.githubusercontent.com/sparkswap/lnd/${LND_VERSION}/lnrpc/rpc.proto"

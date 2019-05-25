@@ -30,6 +30,7 @@ async function getStatus () {
 
     // We validate an engines configuration here and return either an UNLOCKED
     // or VALIDATED status if the code doesn't error out
+    console.log(info)
     const { chains = [], syncedToChain } = info
 
     if (chains.length === 0) {
